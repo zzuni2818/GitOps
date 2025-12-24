@@ -25,5 +25,18 @@ pipeline {
         """, color: 'good', tokenCredentialId: 'slack-key')
       }
     }
+    stage('send diff') {
+      steps {
+        script {
+          def publisher = LastChanges.getLastChangesPublisher "PREVIOUS_REVISION", "SIDE", "LINE", true, true, "", "", "", "", ""
+          publisher.publishLastChanges()
+          def htmlDiff = publisher.getHtmlDiff()
+          writeFile file: "deploy-diff-${dev.BUILD+NUMBER}.html", text: htmlDiff
+        }
+        slackSend(message: """${env.JOB_NAME} #${env.BUILD_NUMBER} End
+        (<${env.BUILD_URL}/last-changes|Check Last changes>)"""
+        , color: 'good', tokenCredentialId: 'slack-key')
+      }
+    }
   }
 }
